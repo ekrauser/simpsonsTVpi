@@ -32,36 +32,47 @@ tools/encode.py    run on your desktop/NAS: Plex library -> 480p files
 tools/plex_export.py  Plex playlist -> playlists/NAME.txt
 ```
 
-## 1. Get the episodes onto the share
+## 1. Episodes: three options, cheapest first
 
-**Already have encoded episodes on the Pi's SD card?** They're in the right
-format already. Copy them to the share once and skip the encoder, or use it
-only to fill gaps (it never touches files that already exist in `--dst`):
+**Keep them on the SD card.** The player looks in `videos/` first, so
+point `media_dirs` at the folder you already have (or symlink it to
+`videos/`) and everything below works with no copying. Streaming is about
+backup and adding episodes without touching the card, not about playback.
+
+**Play the Plex originals directly.** The Pi Zero hardware-decodes H.264 up
+to 1080p and omxplayer scales it to the screen, so if your Plex files are
+H.264 at a modest bitrate you can share the Plex folder read-only and skip
+encoding entirely. Check one file:
 
 ```sh
-# from your desktop, straight from the running Pi (slow over wifi; leave it overnight)
+ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,bit_rate -of csv=p=0 episode.mkv
+```
+
+`h264` at 720p or under ~5 Mbit/s is usually fine. Test on the Pi before
+committing to it:
+
+```sh
+omxplayer --no-osd --aspect-mode fill "/mnt/simpsonstv/Season 05/The Simpsons - S05E05.mkv"
+```
+
+`hevc`/`h265`, 10-bit, or high-bitrate 1080p won't play on a Zero.
+
+**Encode.** For files the Zero can't play, run the encoder on your desktop
+or NAS, pointed at the Plex folder and at the share. It only encodes files
+missing from `--dst`, so copy the SD card's already-encoded episodes there
+first and it will just fill the gaps:
+
+```sh
 scp -r pi@raspberrypi.local:simpsonstv/videos/ /path/to/share/simpsonstv/
-# or pull the SD card and copy the folder from its ext4 root partition
+python3 tools/encode.py --src "/volume1/video/TV/The Simpsons" --dst /volume1/media/simpsonstv --flat
 ```
 
-Check the filenames contain `S05E05`-style codes (`ls | head`); the playlists
-match on those. Files without codes still play in `all` and match globs like
-`*treehouse*`, they just can't be picked by code.
+Output is 480p H.264 baseline + AAC with `+faststart`; filenames are kept
+so `S05E05` codes survive. `--dry-run` shows what it would do.
 
-**Encoding from Plex.** The Pi can't play what Plex has (1080p, x265, whatever). It needs 480p H.264
-baseline. Run the encoder on your desktop or NAS, pointed at the folder Plex
-already indexes and at the folder you'll share to the Pi:
-
-```sh
-python3 tools/encode.py --src "/volume1/video/TV/The Simpsons" --dst /volume1/media/simpsonstv
-```
-
-It's incremental (skips files already in `--dst`), keeps filenames so the
-`S05E05` codes survive, mirrors season folders, and runs several ffmpeg jobs
-in parallel. Add `--dry-run` to see what it would do. Re-run it whenever new
-episodes land in Plex.
-
-Share `/volume1/media/simpsonstv` read-only over SMB (or NFS) to the Pi.
+Whichever option: filenames should contain `S05E05`-style codes, because
+the playlists match on those. Files without codes still play in `all` and
+match globs like `*treehouse*`.
 
 ## 2. Set up the Pi
 
