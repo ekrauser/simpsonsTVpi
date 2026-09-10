@@ -67,10 +67,10 @@ Within a few seconds of `tvremote` starting, Settings > Devices shows
 
 | entity | |
 |---|---|
-| `select.simpsonstv_playlist` | `auto` = follow the date schedule; any other option forces that playlist until you pick `auto` again. Survives reboots. |
-| `button.simpsonstv_next` | skip the current episode |
-| `sensor.simpsonstv_active` | the playlist actually playing right now (schedule result or override) |
-| `sensor.simpsonstv_now_playing` | current episode filename |
+| `select.simpsons_tv_playlist` | `auto` = follow the date schedule; any other option forces that playlist until you pick `auto` again. Survives reboots. |
+| `button.simpsons_tv_next_episode` | skip the current episode |
+| `sensor.simpsons_tv_active_playlist` | the playlist actually playing right now (schedule result or override) |
+| `sensor.simpsons_tv_now_playing` | current episode filename |
 
 Nothing is configured on the HA side; it's MQTT discovery. Playlist files
 added to the repo show up as new options after `update.sh`. The entities go
@@ -86,7 +86,7 @@ trigger:
     to: "on"
 action:
   - service: select.select_option
-    target: { entity_id: select.simpsonstv_playlist }
+    target: { entity_id: select.simpsons_tv_playlist }
     data: { option: halloween }
 ```
 
