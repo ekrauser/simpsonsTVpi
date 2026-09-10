@@ -33,7 +33,12 @@ done
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 
 say "Packages"
-sudo apt-get update -qq
+# Buster is end-of-life; its packages moved to legacy.raspbian.org. Repoint a
+# stock sources.list so apt still works on the guide's image.
+if grep -q "raspbian.raspberrypi.org" /etc/apt/sources.list 2>/dev/null; then
+    sudo sed -i.bak "s#http://raspbian.raspberrypi.org/raspbian#http://legacy.raspbian.org/raspbian#" /etc/apt/sources.list
+fi
+sudo apt-get update -qq || echo "WARNING: apt-get update failed; trying to install with the current lists" >&2
 sudo apt-get install -y -qq python3 python3-rpi.gpio python3-paho-mqtt omxplayer raspi-gpio git cifs-utils nfs-common
 
 say "Config"

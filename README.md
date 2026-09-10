@@ -38,6 +38,7 @@ videos folder across (a rename, instant, nothing copied):
 ```sh
 mv ~/simpsonstv ~/simpsonstv-old
 git clone https://github.com/ekrauser/simpsonsTVpi ~/simpsonstv
+rm -r ~/simpsonstv/videos          # the repo's empty placeholder; the mv below must not nest under it
 mv ~/simpsonstv-old/videos ~/simpsonstv/videos
 cd ~/simpsonstv
 ./install.sh --mqtt <broker host> --mqtt-user <mqtt user>     # prompts for the password
