@@ -1,0 +1,16 @@
+[Unit]
+Description=Simpsons TV player
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=__DIR__
+ExecStart=/usr/bin/python3 __DIR__/player.py
+Restart=always
+RestartSec=3
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

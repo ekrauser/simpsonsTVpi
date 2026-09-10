@@ -1,0 +1,11 @@
+# Local, per-Pi things
+config.json
+state/
+videos/*
+!videos/.gitkeep
+tools/encoded/
+__pycache__/
+*.pyc
+.idea/
+.vscode/
+*.cred

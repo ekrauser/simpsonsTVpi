@@ -1,0 +1,3 @@
+# Seasons 1-9 only. Not on the schedule; use it with: tvctl set golden-era
+
+S01E01 - S09E25

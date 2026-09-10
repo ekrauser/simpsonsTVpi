@@ -1,0 +1,12 @@
+[Unit]
+Description=Simpsons TV power button
+After=local-fs.target
+
+[Service]
+WorkingDirectory=__DIR__
+ExecStart=/usr/bin/python3 __DIR__/buttons.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

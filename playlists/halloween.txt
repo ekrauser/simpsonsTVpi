@@ -1,0 +1,45 @@
+# Treehouse of Horror
+#
+# One entry per line: an episode code (S05E05), a whole season (S05),
+# a range (S01E01 - S08E25), or a filename glob (*Treehouse*).
+# Anything after # is a comment. Codes that aren't in your library are
+# skipped, so it's fine to list episodes you don't have yet.
+
+S02E03   # Treehouse of Horror
+S03E07   # Treehouse of Horror II
+S04E05   # Treehouse of Horror III
+S05E05   # Treehouse of Horror IV
+S06E06   # Treehouse of Horror V
+S07E06   # Treehouse of Horror VI
+S08E01   # Treehouse of Horror VII
+S09E04   # Treehouse of Horror VIII
+S10E04   # Treehouse of Horror IX
+S11E04   # Treehouse of Horror X
+S12E01   # Treehouse of Horror XI
+S13E01   # Treehouse of Horror XII
+S14E01   # Treehouse of Horror XIII
+S15E01   # Treehouse of Horror XIV
+S16E01   # Treehouse of Horror XV
+S17E04   # Treehouse of Horror XVI
+S18E04   # Treehouse of Horror XVII
+S19E05   # Treehouse of Horror XVIII
+S20E04   # Treehouse of Horror XIX
+S21E04   # Treehouse of Horror XX
+S22E04   # Treehouse of Horror XXI
+S23E03   # Treehouse of Horror XXII
+S24E02   # Treehouse of Horror XXIII
+S25E02   # Treehouse of Horror XXIV
+S26E04   # Treehouse of Horror XXV
+S27E05   # Treehouse of Horror XXVI
+S28E04   # Treehouse of Horror XXVII
+S29E04   # Treehouse of Horror XXVIII
+S30E04   # Treehouse of Horror XXIX
+S31E04   # Treehouse of Horror XXX
+S32E04   # Treehouse of Horror XXXI
+S33E03   # Treehouse of Horror XXXII
+S34E06   # Treehouse of Horror XXXIII
+S35E05   # Treehouse of Horror XXXIV
+S36E05   # Treehouse of Horror XXXV
+
+# Catch-all so newer specials get picked up by name, whatever their code.
+*treehouse*of*horror*
