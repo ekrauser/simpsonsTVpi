@@ -12,5 +12,18 @@
   "player_cmd": ["omxplayer", "--no-osd", "--aspect-mode", "fill", "{file}"],
 
   "rescan_seconds": 300,
-  "retry_seconds": 15
+  "retry_seconds": 15,
+
+  "remote": {
+    "http_port": 8080,
+    "mqtt": {
+      "host": "",
+      "port": 1883,
+      "username": "",
+      "password": "",
+      "prefix": "simpsonstv",
+      "discovery_prefix": "homeassistant",
+      "device_name": "Simpsons TV"
+    }
+  }
 }

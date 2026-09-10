@@ -8,18 +8,14 @@
 #   tvctl next            skip the current episode
 #   tvctl show NAME       print the files a playlist resolves to
 #   tvctl log             follow the player log
-#   tvctl restart         restart the player and button services
+#   tvctl restart         restart the player, button and remote services
+#
+# Remote control (phone / Home Assistant): see remote.py and the README.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 STATE="$HERE/state"
 PLAYER="$HERE/player.py"
-
-skip() {
-    if [ -f "$STATE/child_pid" ]; then
-        kill "$(cat "$STATE/child_pid")" 2>/dev/null || true
-    fi
-}
 
 case "${1:-status}" in
     status)   python3 "$PLAYER" --status
@@ -27,17 +23,10 @@ case "${1:-status}" in
               ;;
     list)     python3 "$PLAYER" --list ;;
     show)     python3 "$PLAYER" --resolve "${2:?usage: tvctl show NAME}" ;;
-    set)      name="${2:?usage: tvctl set NAME}"
-              if [ "$name" != "all" ] && [ ! -f "$HERE/playlists/$name.txt" ]; then
-                  echo "no playlist named '$name' (see: tvctl list)" >&2; exit 1
-              fi
-              mkdir -p "$STATE"
-              printf '%s\n' "$name" > "$STATE/override"
-              skip
-              echo "override -> $name" ;;
-    auto)     rm -f "$STATE/override"; skip; echo "override cleared; following schedule" ;;
-    next)     skip ;;
+    set)      python3 "$HERE/control.py" set "${2:?usage: tvctl set NAME}" ;;
+    auto)     python3 "$HERE/control.py" auto ;;
+    next)     python3 "$HERE/control.py" next ;;
     log)      journalctl -u tvplayer -f -n 50 ;;
-    restart)  sudo systemctl restart tvplayer tvbutton; echo "restarted" ;;
+    restart)  sudo systemctl restart tvplayer tvbutton tvremote; echo "restarted" ;;
     *)        sed -n '2,12p' "$0"; exit 1 ;;
 esac
