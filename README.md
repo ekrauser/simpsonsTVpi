@@ -8,6 +8,9 @@ reworked so that:
   optional offline fallback.
 - **Playlists switch by date.** Treehouse of Horror in October, Christmas
   episodes in December, whatever you like. Or force one with `tvctl set`.
+- **Remote control from Home Assistant or a phone.** Pick the playlist and
+  skip episodes from an HA dashboard, an automation, or a web page the Pi
+  serves.
 - **Plex is the playlist editor.** Build a playlist in Plex, export it to a
   text file with one command, commit it.
 - **Everything the Pi needs is in this repo.** Scripts, playlists, systemd
@@ -23,6 +26,8 @@ that does that well on it.
 player.py          picks a playlist by date/override, shuffles, plays on loop
 buttons.py         power button -> screen on/off (same as the guide)
 tvctl              status / list / set / auto / next / log / restart
+remote.py          web remote + HTTP API + Home Assistant (MQTT discovery)
+control.py         the set/auto/skip operations shared by tvctl and remote.py
 playlists/         one .txt per playlist + schedule.json
 config.json        per-Pi settings (copied from config.example.json)
 install.sh         installs packages, mount, services. Re-runnable.
@@ -98,11 +103,19 @@ cd ~/simpsonstv
 systemd automount, so a NAS that's off at boot doesn't hang the Pi; the
 player just keeps retrying and plays whatever's in `videos/` meanwhile.
 
-Already have a working Pi from the guide? Skip `setup-boot.sh`, run
-`install.sh`, then `sudo systemctl disable` the old `tvplayer`/`tvbutton`
-services if they pointed somewhere else (install.sh overwrites units of the
-same name, so usually there's nothing to do). Move any episodes you want
-offline into `videos/`, or leave it empty.
+Already have a working Pi from the guide, with the episodes in
+`~/simpsonstv/videos`? Skip `setup-boot.sh` and keep the videos where they
+are; a rename is instant, no copying:
+
+```sh
+mv ~/simpsonstv ~/simpsonstv-old
+git clone https://github.com/ekrauser/simpsonsTVpi ~/simpsonstv
+mv ~/simpsonstv-old/videos ~/simpsonstv/videos
+cd ~/simpsonstv && ./install.sh          # add --mqtt ... for Home Assistant, see below
+tvctl list
+```
+
+`install.sh` replaces the old `tvplayer` / `tvbutton` units with these.
 
 **Waveshare overlays.** The `.dtbo` files from Waveshare's
 [28DPIB_DTBO.zip](https://www.waveshare.com/wiki/File:28DPIB_DTBO.zip) go in
@@ -160,6 +173,78 @@ tvctl show christmas  the actual files a playlist resolves to
 tvctl log             follow the player log
 ```
 
+## 5. Remote control
+
+`remote.py` runs as the `tvremote` service and offers two doors.
+
+### Home Assistant (MQTT)
+
+You need an MQTT broker HA can see, usually the Mosquitto add-on with the
+MQTT integration set up. Then:
+
+```sh
+./install.sh --mqtt homeassistant.local --mqtt-user simpsonstv
+```
+
+That writes the broker into `config.json` and restarts the service. Within a
+few seconds HA shows a **Simpsons TV** device (Settings > Devices) with:
+
+| entity | what it does |
+|---|---|
+| `select.simpsonstv_playlist` | `auto` follows the schedule; any other option forces that playlist |
+| `button.simpsonstv_next` | skip the current episode |
+| `sensor.simpsonstv_now_playing` | episode filename without extension |
+| `sensor.simpsonstv_active` | the playlist actually playing (schedule or override) |
+
+Nothing to configure in HA; it's MQTT discovery. New playlist files you
+commit show up in the select automatically. Entities go unavailable when
+the Pi is off. An automation looks like:
+
+```yaml
+alias: Simpsons TV - Halloween party mode
+trigger:
+  - platform: state
+    entity_id: input_boolean.party_mode
+    to: "on"
+action:
+  - service: select.select_option
+    target: { entity_id: select.simpsonstv_playlist }
+    data: { option: halloween }
+```
+
+Topics, if you want them raw: `simpsonstv/playlist/set`, `simpsonstv/next`,
+`simpsonstv/playlist`, `simpsonstv/active`, `simpsonstv/now_playing`,
+`simpsonstv/availability`. The prefix is `remote.mqtt.prefix` in
+`config.json`.
+
+### Web page / HTTP (no MQTT needed)
+
+`http://raspberrypi.local:8080/` is a one-screen remote for a phone
+bookmark. The API behind it:
+
+```
+GET  /api/status             {"active": "halloween", "mode": "manual", "now_playing": ..., "playlists": [...]}
+POST /api/next
+POST /api/playlist/NAME      "auto" to follow the schedule again
+POST /api/auto
+GET  /api/playlists
+```
+
+GET works for the actions too. For HA without MQTT, `rest_command`:
+
+```yaml
+rest_command:
+  simpsonstv_next:
+    url: http://raspberrypi.local:8080/api/next
+    method: post
+  simpsonstv_playlist:
+    url: "http://raspberrypi.local:8080/api/playlist/{{ name }}"
+    method: post
+```
+
+There's no authentication; it's meant for your LAN only. Change the port
+with `remote.http_port`.
+
 ## Config
 
 `config.json` (gitignored, created by install.sh from `config.example.json`):
@@ -170,6 +255,8 @@ tvctl log             follow the player log
 | `player_cmd` | omxplayer with the guide's flags | `{file}` is the path. Swap in `cvlc`/`mpv` on a newer OS |
 | `rescan_seconds` | 300 | how often to re-list the media dirs |
 | `retry_seconds` | 15 | wait when nothing is playable |
+| `remote.http_port` | 8080 | web remote / API port |
+| `remote.mqtt.host` | empty | broker hostname; empty disables MQTT. Also `port`, `username`, `password`, `prefix` |
 
 ## Notes
 

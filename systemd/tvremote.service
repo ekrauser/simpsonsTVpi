@@ -1,0 +1,14 @@
+[Unit]
+Description=Simpsons TV remote control (HTTP + MQTT/Home Assistant)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=__DIR__
+ExecStart=/usr/bin/python3 __DIR__/remote.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
