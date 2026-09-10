@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Control the Simpsons TV from a shell.
+#
+#   tvctl status          what's playing, which playlist, and why
+#   tvctl list            playlists and how many episodes each resolves to
+#   tvctl set NAME        force a playlist (survives reboot) and skip ahead
+#   tvctl auto            back to the date schedule
+#   tvctl next            skip the current episode
+#   tvctl show NAME       print the files a playlist resolves to
+#   tvctl log             follow the player log
+#   tvctl restart         restart the player and button services
+set -euo pipefail
+
+HERE="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+STATE="$HERE/state"
+PLAYER="$HERE/player.py"
+
+skip() {
+    if [ -f "$STATE/child_pid" ]; then
+        kill "$(cat "$STATE/child_pid")" 2>/dev/null || true
+    fi
+}
+
+case "${1:-status}" in
+    status)   python3 "$PLAYER" --status
+              [ -f "$STATE/override" ] && echo "override:        $(cat "$STATE/override")"
+              ;;
+    list)     python3 "$PLAYER" --list ;;
+    show)     python3 "$PLAYER" --resolve "${2:?usage: tvctl show NAME}" ;;
+    set)      name="${2:?usage: tvctl set NAME}"
+              if [ "$name" != "all" ] && [ ! -f "$HERE/playlists/$name.txt" ]; then
+                  echo "no playlist named '$name' (see: tvctl list)" >&2; exit 1
+              fi
+              mkdir -p "$STATE"
+              printf '%s\n' "$name" > "$STATE/override"
+              skip
+              echo "override -> $name" ;;
+    auto)     rm -f "$STATE/override"; skip; echo "override cleared; following schedule" ;;
+    next)     skip ;;
+    log)      journalctl -u tvplayer -f -n 50 ;;
+    restart)  sudo systemctl restart tvplayer tvbutton; echo "restarted" ;;
+    *)        sed -n '2,12p' "$0"; exit 1 ;;
+esac

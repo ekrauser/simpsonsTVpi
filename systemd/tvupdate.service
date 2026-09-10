@@ -1,0 +1,10 @@
+[Unit]
+Description=Simpsons TV: pull latest playlists/scripts from git
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pi
+WorkingDirectory=__DIR__
+ExecStart=__DIR__/update.sh

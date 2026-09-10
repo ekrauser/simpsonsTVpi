@@ -1,0 +1,18 @@
+{
+  "_comment": [
+    "Which playlist plays on which dates. Rules are checked top to bottom;",
+    "the first match wins. Dates are MM-DD, inclusive, and may wrap past",
+    "New Year (e.g. from 12-20 to 01-02). Outside every window, 'default'",
+    "plays. 'tvctl set NAME' overrides all of this until 'tvctl auto'.",
+    "",
+    "Optional per rule: mix_in + mix_ratio sprinkle episodes from another",
+    "playlist into the holiday rotation so 30 Treehouse episodes don't get",
+    "stale over a whole month. mix_ratio 0.25 = roughly one in four picks."
+  ],
+  "default": "all",
+  "rules": [
+    { "playlist": "halloween",    "from": "10-01", "to": "10-31", "mix_in": "all", "mix_ratio": 0.25 },
+    { "playlist": "thanksgiving", "from": "11-20", "to": "11-27", "mix_in": "all", "mix_ratio": 0.75 },
+    { "playlist": "christmas",    "from": "12-01", "to": "12-26", "mix_in": "all", "mix_ratio": 0.25 }
+  ]
+}

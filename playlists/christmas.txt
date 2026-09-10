@@ -1,0 +1,24 @@
+# Christmas episodes (a starter list - edit freely)
+
+S01E01   # Simpsons Roasting on an Open Fire
+S07E11   # Marge Be Not Proud
+S09E10   # Miracle on Evergreen Terrace
+S11E09   # Grift of the Magi
+S12E08   # Skinner's Sense of Snow
+S13E06   # She of Little Faith
+S15E07   # 'Tis the Fifteenth Season
+S17E09   # Simpsons Christmas Stories
+S18E09   # Kill Gil, Volumes I & II
+S21E08   # O Brother, Where Bart Thou?
+S22E08   # The Fight Before Christmas
+S23E09   # Holidays of Future Passed
+S25E08   # White Christmas Blues
+S26E09   # I Won't Be Home for Christmas
+S28E10   # The Nightmare After Krustmas
+S30E10   # 'Tis the 30th Season
+S31E10   # Bobby, It's Cold Outside
+S32E10   # A Springfield Summer Christmas for Christmas
+
+# Catch anything with Christmas in the filename, whatever its code.
+*christmas*
+*krustmas*

@@ -1,0 +1,16 @@
+{
+  "_comment": "Copy to config.json (install.sh does this). Relative paths are relative to the repo.",
+
+  "media_dirs": ["videos", "/mnt/simpsonstv"],
+
+  "playlist_dir": "playlists",
+  "schedule_file": "playlists/schedule.json",
+  "state_dir": "state",
+
+  "extensions": [".mp4", ".mkv", ".m4v", ".mov"],
+
+  "player_cmd": ["omxplayer", "--no-osd", "--aspect-mode", "fill", "{file}"],
+
+  "rescan_seconds": 300,
+  "retry_seconds": 15
+}
