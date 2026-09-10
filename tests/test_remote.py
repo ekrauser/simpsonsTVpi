@@ -61,12 +61,45 @@ class ControlTests(Base):
 
     def test_skip_kills_child(self):
         import subprocess
-        child = subprocess.Popen(["sleep", "30"])
+        child = subprocess.Popen(["sleep", "30"], start_new_session=True)
         self.ctl.tv.state.write("child_pid", child.pid)
         self.assertTrue(self.ctl.skip())
         self.assertNotEqual(child.wait(timeout=5), 0)
         self.ctl.tv.state.clear("child_pid")
         self.assertFalse(self.ctl.skip())
+
+    def test_skip_kills_whole_process_group(self):
+        """omxplayer is a shell wrapper around omxplayer.bin: skipping must
+        take the grandchild down too, or two episodes play at once."""
+        import threading
+        import time
+        fake = os.path.join(self.tmp, "fakeplayer")
+        with open(fake, "w") as f:
+            f.write("#!/bin/sh\nsleep 30 &\nexec sleep 30\n")
+        os.chmod(fake, 0o755)
+        self.cfg["player_cmd"] = [fake, "{file}"]
+        tv = player.TV(self.cfg)
+        seen = {}
+
+        def skipper():
+            for _ in range(100):
+                pid = self.ctl._read("child_pid")
+                if pid:
+                    time.sleep(0.3)  # let the wrapper fork its background child
+                    seen["pgid"] = int(pid)
+                    seen["skipped"] = self.ctl.skip()
+                    return
+                time.sleep(0.05)
+
+        t = threading.Thread(target=skipper)
+        t.start()
+        started = time.time()
+        tv.run(max_plays=1)
+        t.join(5)
+        self.assertTrue(seen.get("skipped"))
+        self.assertLess(time.time() - started, 10, "skip did not end the episode")
+        with self.assertRaises(OSError):
+            os.killpg(seen["pgid"], 0)  # nothing from the group survives
 
 
 class HttpTests(Base):

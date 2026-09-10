@@ -65,9 +65,8 @@ class Control(object):
         if not pid:
             return False
         try:
-            os.kill(int(pid), signal.SIGTERM)
-            return True
-        except (OSError, ValueError):
+            return player.signal_group(int(pid), signal.SIGTERM)
+        except ValueError:
             return False
 
     # -- helpers --------------------------------------------------------

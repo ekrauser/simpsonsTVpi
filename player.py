@@ -316,6 +316,43 @@ class State(object):
 
 
 # --------------------------------------------------------------------------
+# Process groups (the player child runs as its own session leader)
+# --------------------------------------------------------------------------
+
+def signal_group(pid, sig):
+    """Signal the process group led by pid; fall back to the pid alone.
+    Returns True if something was signalled."""
+    try:
+        os.killpg(pid, sig)
+        return True
+    except ProcessLookupError:
+        pass
+    except OSError:
+        pass
+    try:
+        os.kill(pid, sig)
+        return True
+    except OSError:
+        return False
+
+
+def kill_group(pid, grace=3.0):
+    """After the child exited, make sure nothing it spawned outlives it."""
+    end = time.time() + grace
+    while True:
+        try:
+            os.killpg(pid, 0)
+        except OSError:
+            return
+        if time.time() > end:
+            log.warning("player left processes behind; killing group %s", pid)
+            signal_group(pid, signal.SIGKILL)
+            return
+        signal_group(pid, signal.SIGTERM)
+        time.sleep(0.2)
+
+
+# --------------------------------------------------------------------------
 # Player
 # --------------------------------------------------------------------------
 
@@ -406,13 +443,17 @@ class TV(object):
         log.info("playing %s", os.path.basename(video))
         self.state.write("now_playing", video)
         try:
-            self.child = subprocess.Popen(cmd)
+            # Own session/process group: /usr/bin/omxplayer is a shell wrapper
+            # around omxplayer.bin, so a skip must signal the whole group or
+            # the .bin keeps playing after the wrapper dies.
+            self.child = subprocess.Popen(cmd, start_new_session=True)
         except OSError as e:
             log.error("cannot start player %r: %s", cmd[0], e)
             self._sleep(self.cfg["retry_seconds"])
             return 1
         self.state.write("child_pid", self.child.pid)
         rc = self.child.wait()
+        kill_group(self.child.pid)
         self.child = None
         self.state.clear("child_pid")
         return rc
@@ -425,10 +466,7 @@ class TV(object):
     def _on_signal(self, signum, frame):
         self.stopping = True
         if self.child and self.child.poll() is None:
-            try:
-                self.child.terminate()
-            except OSError:
-                pass
+            signal_group(self.child.pid, signal.SIGTERM)
 
 
 # --------------------------------------------------------------------------
