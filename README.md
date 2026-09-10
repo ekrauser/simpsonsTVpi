@@ -32,9 +32,23 @@ tools/encode.py    run on your desktop/NAS: Plex library -> 480p files
 tools/plex_export.py  Plex playlist -> playlists/NAME.txt
 ```
 
-## 1. Encode the episodes (on a real computer)
+## 1. Get the episodes onto the share
 
-The Pi can't play what Plex has (1080p, x265, whatever). It needs 480p H.264
+**Already have encoded episodes on the Pi's SD card?** They're in the right
+format already. Copy them to the share once and skip the encoder, or use it
+only to fill gaps (it never touches files that already exist in `--dst`):
+
+```sh
+# from your desktop, straight from the running Pi (slow over wifi; leave it overnight)
+scp -r pi@raspberrypi.local:simpsonstv/videos/ /path/to/share/simpsonstv/
+# or pull the SD card and copy the folder from its ext4 root partition
+```
+
+Check the filenames contain `S05E05`-style codes (`ls | head`); the playlists
+match on those. Files without codes still play in `all` and match globs like
+`*treehouse*`, they just can't be picked by code.
+
+**Encoding from Plex.** The Pi can't play what Plex has (1080p, x265, whatever). It needs 480p H.264
 baseline. Run the encoder on your desktop or NAS, pointed at the folder Plex
 already indexes and at the folder you'll share to the Pi:
 
